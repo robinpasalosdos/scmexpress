@@ -3,139 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>REQUEST FOR PAYMENT FORM</title>
+    <title>QuickRFP Generator</title>
     <style>
+        /* --- GLOBAL LAYOUT --- */
         body {
             font-family: 'Arial', sans-serif;
             background-color: #f4f4f9;
-            padding: 20px;
             margin: 0;
+            padding: 0;
             color: #333;
+            height: 100vh; /* Fix to window height */
+            overflow: hidden; /* Prevent body scroll */
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
-        /* --- INPUT FORM STYLES --- */
+        /* --- MAIN APP CONTAINER (SPLIT VIEW) --- */
         .no-print {
-            max-width: 800px;
-            margin: 0 auto;
+            width: 95%;
+            height: 95vh;
+            max-width: 1200px;
             background: #fff;
-            padding: 40px;
+            padding-block: 20px;
+            padding-inline: 40px;
             border-radius: 12px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
             border: 1px solid #e0e0e0;
+            display: flex; /* Split Layout */
+            gap: 30px;
+            box-sizing: border-box;
         }
 
+        /* --- LEFT PANE (INPUTS) --- */
+        .left-pane {
+            flex: 2; /* Takes up 66% width */
+            overflow-y: auto; /* Allow scrolling if form is long */
+            padding-right: 10px;
+        }
+
+        /* --- RIGHT PANE (QUEUE) --- */
+        .right-pane {
+            flex: 1; /* Takes up 33% width */
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid #eee;
+            padding-left: 20px;
+            background-color: #fafafa;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        /* --- FORM STYLES --- */
         .form-section-title {
-            font-size: 14px;
+            font-size: 13px;
             text-transform: uppercase;
             color: #666;
             letter-spacing: 1px;
             border-bottom: 1px solid #eee;
             padding-bottom: 5px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             margin-top: 10px;
             font-weight: bold;
         }
 
-        .form-row {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            flex: 1; 
-        }
-        
+        .form-row { display: flex; gap: 15px; margin-bottom: 15px; }
+        .input-group { display: flex; flex-direction: column; gap: 5px; flex: 1; }
         .grow-2 { flex: 2; } 
         .grow-0-5 { flex: 0.5; }
 
         input[type="text"], input[type="number"], input[type="date"], textarea { 
-            padding: 12px; 
-            border: 1px solid #ccc; 
-            border-radius: 6px; 
-            font-size: 14px;
-            transition: border-color 0.3s;
-            width: 100%;
-            box-sizing: border-box; 
+            padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; width: 100%; box-sizing: border-box; 
         }
-
         input:focus, textarea:focus { border-color: #007bff; outline: none; }
+        label { font-weight: bold; font-size: 12px; color: #444; }
 
-        label { font-weight: bold; font-size: 13px; color: #444; }
+        .radio-group { display: flex; gap: 10px; flex-wrap: wrap; background: #f1f3f5; padding: 10px; border-radius: 5px; width: 100%; box-sizing: border-box; }
+        .radio-group label { cursor: pointer; display: flex; align-items: center; gap: 5px; font-weight: 600; font-size: 12px; }
 
-        .radio-group {
-            display: flex; gap: 15px; flex-wrap: wrap; 
-            background: #f1f3f5; padding: 15px;
-            border-radius: 8px; width: 100%; box-sizing: border-box;
+        /* --- BUTTONS --- */
+        .btn-container { display: flex; gap: 10px; margin-top: 15px; }
+        
+        button { 
+            padding: 12px; cursor: pointer; border-radius: 6px; border: none; 
+            font-weight: bold; font-size: 13px; transition: all 0.2s; flex: 1; 
         }
-        .radio-group label { cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 600; }
-
-        /* Buttons */
-        .btn-container {
-            display: flex;
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        button { padding: 15px 25px; cursor: pointer; border-radius: 6px; border: none; font-weight: bold; font-size: 15px; transition: transform 0.1s, background 0.2s; flex: 1;}
         button:active { transform: translateY(1px); }
         
-        #printNowBtn { 
-            background-color: #28a745; color: white; 
-            box-shadow: 0 4px 6px rgba(40, 167, 69, 0.2);
-            flex: 2; /* Make print button larger */
-        }
-        #printNowBtn:hover { background-color: #218838; }
+        #addOrUpdateBtn { background-color: #ffc107; color: #333; box-shadow: 0 3px 5px rgba(255, 193, 7, 0.2); flex: 1.5; }
+        #addOrUpdateBtn:hover { filter: brightness(90%); }
 
-        #clearAllBtn {
-            background-color: #dc3545; color: white;
-            box-shadow: 0 4px 6px rgba(220, 53, 69, 0.2);
-            flex: 1;
-        }
-        #clearAllBtn:hover { background-color: #c82333; }
+        #cancelClearBtn { background-color: #dc3545; color: white; box-shadow: 0 3px 5px rgba(220, 53, 69, 0.2); }
+        #cancelClearBtn:hover { background-color: #c82333; }
 
-        /* Floating Actions */
+        #printCurrentBtn { background-color: #17a2b8; color: white; }
+        #printCurrentBtn:hover { background-color: #138496; }
+
+        /* --- QUEUE STYLES (RIGHT PANE) --- */
+        .queue-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
+        }
+        .queue-header h4 { margin: 0; color: #333; }
+        
+        #queue-items-container {
+            flex-grow: 1;
+            overflow-y: auto; /* Scrollable list */
+            margin-bottom: 10px;
+            border: 1px solid #eee;
+            background: white;
+            border-radius: 6px;
+        }
+
+        .queue-item {
+            padding: 10px; border-bottom: 1px solid #f0f0f0; font-size: 12px; display: flex; flex-direction: column; gap: 5px;
+        }
+        .queue-item:last-child { border-bottom: none; }
+        .queue-item.editing { border-left: 4px solid #007bff; background-color: #eef6fc; }
+
+        .q-info { font-weight: bold; display: flex; justify-content: space-between; }
+        .q-details { color: #666; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+
+        .q-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 2px; }
+        .q-btn { cursor: pointer; font-weight: bold; font-size: 11px; padding: 2px 6px; border-radius: 3px; }
+        .q-edit { color: #007bff; background: #ebf5ff; }
+        .q-remove { color: #dc3545; background: #ffeef0; }
+
+        /* Queue Controls */
+        .queue-controls { display: flex; gap: 10px; flex-shrink: 0; }
+        #printQueueBtn { background-color: #28a745; color: white; }
+        #clearQueueBtn { background-color: #6c757d; color: white; flex: 0.5; }
+
+        /* --- NAVIGATION & PRINT AREA --- */
         .action-buttons { 
-            position: fixed; bottom: 30px; right: 30px; z-index: 100; 
-            display: flex; gap: 10px;
+            position: fixed; 
+            bottom: 30px; 
+            left: 50%; /* Center Horizontally */
+            transform: translateX(-50%); 
+            z-index: 100; 
+            display: none; /* Hidden by default */
         }
         
-        #backBtn { background-color: #6c757d; color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); width: auto; padding: 12px 20px;}
-        #backBtn:hover { background-color: #5a6268; }
+        #backBtn { 
+            background-color: #007bff; color: white; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3); 
+            width: auto; padding: 12px 30px; font-size: 14px; 
+        }
 
-        #createNewBtn { background-color: #007bff; color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); width: auto; padding: 12px 20px;}
-        #createNewBtn:hover { background-color: #0069d9; }
+        #print-area { display: none; } /* Hidden on screen */
+        .hidden-on-screen { display: none !important; }
 
-        /* --- PRINT PREVIEW CONTAINER --- */
-        #app-container {
+        /* --- PRINT TEMPLATE STYLES --- */
+        .print-page {
             width: 850px; 
-            min-height: 1050px; 
-            margin: 20px auto;
+            height: 1050px; 
+            margin: 0 auto;
             background-color: white;
             padding: 30px 40px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             box-sizing: border-box;
-            border: 1px solid #ccc;
+            border: 1px solid #ccc; 
             display: flex; 
             flex-direction: column;
             gap: 15px; 
+            page-break-after: always;
+            overflow: hidden;
+            margin-bottom: 20px; 
         }
-
-        .hidden-on-screen { display: none !important; }
 
         /* Internal Print Classes */
         .header-section { display: flex; align-items: center; justify-content: center; margin-bottom: 5px; position: relative; min-height: 80px; }
         .logo-placeholder { width: 120px; position: absolute; left: 0; top: 50%; transform: translateY(-50%); }
         .logo-placeholder img { max-width: 100%; height: auto; object-fit: contain; }
         .form-title { font-size: 16pt; font-weight: bold; margin: 0; text-align: center; width: 100%; }
-        
         .check-options { display: flex; justify-content: flex-start; gap: 30px; margin-bottom: 10px; align-items: center; font-size: 9pt; padding-left: 0; margin-left: 60px; }
         .check-item { display: flex; align-items: center; gap: 8px; }
         .checkbox-box { width: 30px; height: 20px; border: 1px solid black; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.4em; line-height: 1; }
-        
         .top-details-group { display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 5px; font-size: 9pt; gap: 20px; }
         .top-details-group > div { display: flex; align-items: flex-end; gap: 10px; }
         .top-details-group > div:nth-child(1) { flex: 25; min-width: 0; }
@@ -143,7 +184,6 @@
         .top-details-group > div:nth-child(3) { flex: 0 0 125px; justify-content: flex-end; }
         .detail-label { white-space: nowrap; padding-bottom: 2px; line-height: 1.3; }
         .detail-value { width: 100%; border-bottom: 1px solid black; text-align: left; padding-bottom: 2px; text-transform: uppercase; white-space: normal; line-height: 1.3; padding-left: 10px; }
-        
         .table-section { border: 1px solid black; display: flex; flex-direction: column; border-inline: none; font-size: 9pt; }
         .table-header { display: flex; border-bottom: 1px solid black; text-align: center; }
         .header-particulars { flex: 3; text-align: center; border-right: 1px solid black; padding: 8px 10px; }
@@ -157,56 +197,12 @@
         .footer-amount-box { flex: 1; padding: 10px; display: flex; justify-content: center; align-items: center; }
         .total-label { font-size: 9pt; margin-right: 5px; }
         .total-value { font-size: 9pt; }
-
-        /* --- UPDATED SIGNATURES CSS --- */
-        .signatures-section {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 5px;
-            gap: 20px;
-            flex-shrink: 0;
-            align-items: stretch;
-        }
-        .signature-block {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            font-size: 9pt;
-        }
-        .signature-label {
-            margin-bottom: 25px; 
-            font-size: 1em;
-            font-weight: normal;
-        }
-        .signature-wrapper {
-            width: 80%;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            align-items: center;
-            margin-bottom: 2px;
-            flex-grow: 1;
-        }
-        .signature-name-line {
-            width: 100%;
-            border-bottom: 1px solid black;
-            min-height: 1.5em;
-            display: flex;
-            align-items: flex-end;
-            justify-content: center;
-            padding-bottom: 2px;
-            font-weight: bold;
-            text-transform: uppercase;
-            white-space: normal;
-            line-height: 1.2;
-        }
-        .signature-label-below {
-            flex-shrink: 0;
-        }
-        /* --------------------------- */
-
+        .signatures-section { display: flex; justify-content: space-between; margin-top: 5px; gap: 20px; flex-shrink: 0; align-items: stretch; }
+        .signature-block { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; font-size: 9pt; }
+        .signature-label { margin-bottom: 25px; font-size: 1em; font-weight: normal; }
+        .signature-wrapper { width: 80%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; margin-bottom: 2px; flex-grow: 1; }
+        .signature-name-line { width: 100%; border-bottom: 1px solid black; min-height: 1.5em; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 2px; font-weight: bold; text-transform: uppercase; white-space: normal; line-height: 1.2; }
+        .signature-label-below { flex-shrink: 0; }
         .footer-notes { font-size: 7pt; flex-shrink: 0; }
         .finance-section { display: flex; justify-content: space-between; border-top: 4px double black; padding-top: 5px; gap: 30px; flex-shrink: 0; font-size: 9pt; }
         .finance-block { display: flex; flex-direction: column; gap: 3px; flex: 1; }
@@ -217,356 +213,492 @@
 
         /* --- PRINT MEDIA QUERY --- */
         @media print {
-            @page {
-                margin: 0;
-                size: auto; /* Uses printer default paper size */
-            }
+            @page { margin: 0; size: auto; }
+            body, html { width: 100%; height: 100%; margin: 0 !important; padding: 0 !important; overflow: visible !important; background-color: white; display: block; }
+            .no-print, .action-buttons { display: none !important; }
+            
+            #print-area { display: block !important; }
 
-            html, body {
-                width: 100%;
-                height: 100%; /* Forces body to match paper height */
-                margin: 0 !important;
-                padding: 0 !important;
-                overflow: hidden !important; /* key fix: hides anything spilling to page 2 */
-                background-color: white;
-            }
-
-            .no-print, .action-buttons {
-                display: none !important;
-            }
-
-            #app-container {
-                width: 100% !important;
-                height: 100% !important; /* Fill exactly one page */
-                max-height: 100% !important; /* Prevent growing beyond one page */
-                margin: 0 !important;
-                
-                /* Reduced top/bottom padding slightly to ensure fit (was 30px) */
-                padding: 20px 40px !important; 
-                
+            .print-page { 
+                width: 100% !important; 
+                height: 100vh !important; 
+                margin: 0 !important; 
+                padding: 30px 40px !important; 
+                border: none !important; 
                 box-shadow: none !important;
-                border: none !important;
-                display: flex !important;
-                
-                /* Tell printer not to create a break after this element */
-                page-break-after: avoid !important;
-                break-after: avoid !important;
+                page-break-after: always !important; 
             }
+            .print-page:last-child { page-break-after: auto !important; }
         }
     </style>
 </head>
 <body>
 
     <div id="input-section" class="no-print">
-        <h1 style="text-align: center; margin-bottom: 10px; color: #333;">📝 Request for Payment</h1>
-        <p style="text-align: center; color: #666; margin-bottom: 30px; font-size: 14px;">Fill out the details below to generate the print form.</p>
         
-        <div class="form-section-title">1. Payment Type</div>
-        <div class="form-row">
-            <div class="radio-group">
-                <label><input type="radio" name="type-opt" value="cash"> Cash Advance</label>
-                <label><input type="radio" name="type-opt" value="reimbursement"> Reimbursement</label>
-                <label><input type="radio" name="type-opt" value="pcf"> PCF(Store)</label>
-                <label><input type="radio" name="type-opt" value="external" checked> External</label>
-            </div>
-        </div>
+        <div class="left-pane">
+            <h1 style="text-align: center; margin-bottom: 26px; color: #333; font-size: 20px;">📝 QuickRFP Generator</h1>
 
-        <div class="form-section-title">2. General Information</div>
-        <div class="form-row">
-            <div class="input-group grow-2">
-                <label>Payee Name:</label>
-                <input type="text" id="payee" placeholder="Enter full name" required>
-            </div>
-            <div class="input-group">
-                <label>Department:</label>
-                <input type="text" id="department" placeholder="Dept Code" value="SCM" required>
-            </div>
-            <div class="input-group">
-                <label>Date:</label>
-                <input type="date" id="date-input" required>
-            </div>
-        </div>
-
-        <div class="form-row">
-            <div class="input-group">
-                <label>Requested By:</label>
-                <input type="text" id="request-by" placeholder="Requestor Name">
-            </div>
-            <div class="input-group">
-                <label>Approved By:</label>
-                <input type="text" id="approved-by" placeholder="Approver Name">
-            </div>
-        </div>
-
-        <div class="form-section-title">3. Financial Details</div>
-        <div class="form-row">
-            <div class="input-group">
-                <label>Particulars:</label>
-                <textarea id="particulars" rows="3" placeholder="Main description of expense..."></textarea>
-            </div>
-        </div>
-        <div class="form-row">
-            <div class="input-group">
-                <label>Additional Details:</label>
-                <textarea id="details" rows="3" placeholder="Extra notes or breakdown..."></textarea>
-            </div>
-        </div>
-
-        <div class="form-row" style="align-items: flex-end; background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px dashed #ccc;">
-            <div class="input-group grow-0-5">
-                <label>Currency:</label>
-                <div class="radio-group" style="padding: 10px; margin: 0;">
-                    <label><input type="radio" name="currency-opt" value="₱" checked> (₱) Peso</label>
-                    <label><input type="radio" name="currency-opt" value="$"> ($) USD</label>
+            <div class="form-section-title">1. Payment Type</div>
+            <div class="form-row">
+                <div class="radio-group">
+                    <label><input type="radio" name="type-opt" value="cash"> Cash Advance</label>
+                    <label><input type="radio" name="type-opt" value="reimbursement"> Reimbursement</label>
+                    <label><input type="radio" name="type-opt" value="pcf"> PCF(Store)</label>
+                    <label><input type="radio" name="type-opt" value="external" checked> External</label>
                 </div>
             </div>
-            <div class="input-group grow-2">
-                <label>Total Amount:</label>
-                <input type="number" id="amount" placeholder="0.00" style="font-size: 18px; font-weight: bold;">
+
+            <div class="form-section-title">2. General Information</div>
+            <div class="form-row">
+                <div class="input-group grow-2">
+                    <label>Payee Name:</label>
+                    <input type="text" id="payee" placeholder="Enter full name">
+                </div>
+                <div class="input-group">
+                    <label>Department:</label>
+                    <input type="text" id="department" placeholder="Dept Code" value="SCM">
+                </div>
+                <div class="input-group">
+                    <label>Date:</label>
+                    <input type="date" id="date-input">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="input-group">
+                    <label>Requested By:</label>
+                    <input type="text" id="request-by" placeholder="Requestor Name">
+                </div>
+                <div class="input-group">
+                    <label>Approved By:</label>
+                    <input type="text" id="approved-by" placeholder="Approver Name">
+                </div>
+            </div>
+
+            <div class="form-section-title">3. Financial Details</div>
+            <div class="form-row">
+                <div class="input-group">
+                    <label>Particulars:</label>
+                    <textarea id="particulars" rows="3" placeholder="Main description..."></textarea>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="input-group">
+                    <label>Additional Details:</label>
+                    <textarea id="details" rows="2" placeholder="Extra notes..."></textarea>
+                </div>
+            </div>
+
+            <div class="form-row" style="align-items: flex-end; background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px dashed #ccc;">
+                <div class="input-group grow-0-5">
+                    <label>Currency:</label>
+                    <div class="radio-group" style="padding: 10px; margin: 0;">
+                        <label><input type="radio" name="currency-opt" value="₱" checked> (₱) Peso</label>
+                        <label><input type="radio" name="currency-opt" value="$"> ($) USD</label>
+                    </div>
+                </div>
+                <div class="input-group grow-2">
+                    <label>Total Amount:</label>
+                    <input type="number" id="amount" placeholder="0.00" style="font-size: 18px; font-weight: bold;">
+                </div>
+            </div>
+            
+            <div class="btn-container">
+                <button id="cancelClearBtn">❌ Clear Form</button>
+                <button id="printCurrentBtn">🖨️ Print Current Only</button>
+                <button id="addOrUpdateBtn">➕ Add to Queue</button>
             </div>
         </div>
-        
-        <div class="btn-container">
-            <button id="clearAllBtn">❌ Clear All</button>
-            <button id="printNowBtn">🖨️ Print Form</button>
+
+        <div class="right-pane">
+            <div class="queue-header">
+                <h4>🖨️ Print Queue</h4>
+            </div>
+            
+            <div id="queue-items-container">
+                </div>
+
+            <div class="queue-controls">
+                <button id="clearQueueBtn">🗑️ Clear All</button>
+                <button id="printQueueBtn">Print Batch</button>
+            </div>
         </div>
+
     </div>
 
-    <div id="app-container" class="hidden-on-screen">
-        <div class="header-section">
-            <div class="logo-placeholder">
-                <img src="logo.png" alt="Logo">
-            </div>
-            <h1 class="form-title">REQUEST FOR PAYMENT</h1>
-        </div>
+    <div id="print-area"></div>
 
-        <div class="check-options">
-            <div class="check-item"><div id="check-cash" class="checkbox-box"></div><span>CASH ADVANCE</span></div>
-            <div class="check-item"><div id="check-reimburse" class="checkbox-box"></div><span>REIMBURSEMENT</span></div>
-            <div class="check-item"><div id="check-pcf" class="checkbox-box"></div><span>PCF (STORE)</span></div>
-            <div class="check-item"><div id="check-external" class="checkbox-box"></div><span>EXTERNAL</span></div>
-        </div>
-
-        <div class="top-details-group">
-            <div><span class="detail-label">PAYEE</span><span id="display-payee" class="detail-value"></span></div>
-            <div style="flex-grow: 0.5;"><span class="detail-label">DEP</span><span id="display-department" class="detail-value"></span></div>
-            <div style="flex-grow: 0.5;"><span class="detail-label">DATE</span><span id="display-date" class="detail-value"></span></div>
-        </div>
-        
-        <div class="table-section">
-            <div class="table-header">
-                <div class="header-particulars">PARTICULARS</div>
-                <div class="header-amount">AMOUNT</div>
-            </div>
-            <div class="table-body">
-                <div class="table-row">
-                    <div id="display-particulars" class="cell-particulars"></div>
-                    <div class="cell-amount"><span id="display-amount"></span></div>
-                </div>
-            </div>
-            <div class="table-footer">
-                <div class="footer-label-box"><span class="total-label">TOTAL</span></div>
-                <div class="footer-amount-box"><span id="display-total-amount" class="total-value"></span></div>
-            </div>
-        </div>
-
-        <div class="signatures-section">
-            <div class="signature-block">
-                <span class="signature-label">REQUESTED BY</span>
-                <div class="signature-wrapper">
-                    <span id="display-request-by" class="signature-name-line"></span>
-                </div>
-                <span class="signature-label-below">Signature over Printed Name</span>
-            </div>
-
-            <div class="signature-block">
-                <span class="signature-label">APPROVED BY</span>
-                <div class="signature-wrapper">
-                    <span id="display-approved-by" class="signature-name-line"></span>
-                </div>
-                <span class="signature-label-below">Director Head</span>
-            </div>
-
-            <div class="signature-block">
-                <span class="signature-label">RECEIVED BY</span>
-                <div class="signature-wrapper"><span class="signature-name-line"></span></div>
-                <span class="signature-label-below">Finance</span>
-            </div>
-        </div>
-
-        <div class="footer-notes">
-            <span>*This form must be accomplished before forwarding to Finance for processing</span><br>
-            <span>Attach all the necessary supporting documents</span>
-        </div>
-
-        <div class="finance-section">
-            <div class="finance-block">
-                <div class="finance-title">FINANCE</div>
-                <div class="finance-item"><span class="finance-label">AR</span><div class="finance-input-line"></div></div>
-                <div class="finance-item"><span class="finance-label">BUDGET</span><div class="finance-input-line"></div></div>
-            </div>
-            <div class="finance-block">
-                <div style="height: 1.5em;"></div> 
-                <div class="finance-item"><span class="finance-label">CHARGED TO</span><div class="finance-input-line"></div></div>
-                <div class="finance-item"><span class="finance-label">CONTROLLER</span><div class="finance-input-line"></div></div>
-            </div>
-        </div>
+    <div class="action-buttons" id="action-buttons">
+        <button id="backBtn">← Edit / Add More</button>
     </div>
 
-    <div class="action-buttons hidden-on-screen" id="action-buttons">
-        <button id="backBtn">← Edit Current</button>
-        <button id="createNewBtn">+ Create New RFP</button>
-    </div>
+    <template id="rfp-template">
+        <div class="print-page">
+            <div class="header-section">
+                <div class="logo-placeholder"><img src="logo.png" alt="Logo"></div>
+                <h1 class="form-title">REQUEST FOR PAYMENT</h1>
+            </div>
+
+            <div class="check-options">
+                <div class="check-item"><div class="checkbox-box box-cash"></div><span>CASH ADVANCE</span></div>
+                <div class="check-item"><div class="checkbox-box box-reimburse"></div><span>REIMBURSEMENT</span></div>
+                <div class="check-item"><div class="checkbox-box box-pcf"></div><span>PCF (STORE)</span></div>
+                <div class="check-item"><div class="checkbox-box box-external"></div><span>EXTERNAL</span></div>
+            </div>
+
+            <div class="top-details-group">
+                <div><span class="detail-label">PAYEE</span><span class="detail-value val-payee"></span></div>
+                <div style="flex-grow: 0.5;"><span class="detail-label">DEP</span><span class="detail-value val-dept"></span></div>
+                <div style="flex-grow: 0.5;"><span class="detail-label">DATE</span><span class="detail-value val-date"></span></div>
+            </div>
+            
+            <div class="table-section">
+                <div class="table-header">
+                    <div class="header-particulars">PARTICULARS</div>
+                    <div class="header-amount">AMOUNT</div>
+                </div>
+                <div class="table-body">
+                    <div class="table-row">
+                        <div class="cell-particulars val-particulars"></div>
+                        <div class="cell-amount"><span class="val-amount"></span></div>
+                    </div>
+                </div>
+                <div class="table-footer">
+                    <div class="footer-label-box"><span class="total-label">TOTAL</span></div>
+                    <div class="footer-amount-box"><span class="val-total total-value"></span></div>
+                </div>
+            </div>
+
+            <div class="signatures-section">
+                <div class="signature-block">
+                    <span class="signature-label">REQUESTED BY</span>
+                    <div class="signature-wrapper">
+                        <span class="signature-name-line val-req"></span>
+                    </div>
+                    <span class="signature-label-below">Signature over Printed Name</span>
+                </div>
+                <div class="signature-block">
+                    <span class="signature-label">APPROVED BY</span>
+                    <div class="signature-wrapper">
+                        <span class="signature-name-line val-app"></span>
+                    </div>
+                    <span class="signature-label-below">Director Head</span>
+                </div>
+                <div class="signature-block">
+                    <span class="signature-label">RECEIVED BY</span>
+                    <div class="signature-wrapper"><span class="signature-name-line"></span></div>
+                    <span class="signature-label-below">Finance</span>
+                </div>
+            </div>
+
+            <div class="footer-notes">
+                <span>*This form must be accomplished before forwarding to Finance for processing</span><br>
+                <span>Attach all the necessary supporting documents</span>
+            </div>
+
+            <div class="finance-section">
+                <div class="finance-block">
+                    <div class="finance-title">FINANCE</div>
+                    <div class="finance-item"><span class="finance-label">AR</span><div class="finance-input-line"></div></div>
+                    <div class="finance-item"><span class="finance-label">BUDGET</span><div class="finance-input-line"></div></div>
+                </div>
+                <div class="finance-block">
+                    <div style="height: 1.5em;"></div> 
+                    <div class="finance-item"><span class="finance-label">CHARGED TO</span><div class="finance-input-line"></div></div>
+                    <div class="finance-item"><span class="finance-label">CONTROLLER</span><div class="finance-input-line"></div></div>
+                </div>
+            </div>
+        </div>
+    </template>
 
     <script>
+        // Data Store
+        let rfpQueue = [];
+        let editingId = null; 
+
         // Elements
-        const appContainer = document.getElementById('app-container');
         const inputSection = document.getElementById('input-section');
+        const printArea = document.getElementById('print-area');
         const actionButtons = document.getElementById('action-buttons');
-
-        const payeeInput = document.getElementById('payee');
-        const deptInput = document.getElementById('department');
-        const requestByInput = document.getElementById('request-by');
-        const approvedByInput = document.getElementById('approved-by');
-        const dateInput = document.getElementById('date-input');
-        const particularsInput = document.getElementById('particulars');
-        const detailsInput = document.getElementById('details');
-        const amountInput = document.getElementById('amount');
-        const typeRadios = document.getElementsByName('type-opt'); 
-        const currencyRadios = document.getElementsByName('currency-opt'); 
-
-        // Display Targets
-        const displayPayee = document.getElementById('display-payee');
-        const displayDepartment = document.getElementById('display-department');
-        const displayDate = document.getElementById('display-date');
-        const displayRequestBy = document.getElementById('display-request-by');
-        const displayApprovedBy = document.getElementById('display-approved-by');
-        const displayParticulars = document.getElementById('display-particulars');
-        const displayAmount = document.getElementById('display-amount');
-        const displayTotalAmount = document.getElementById('display-total-amount');
+        const queueItemsContainer = document.getElementById('queue-items-container');
         
-        const checkCash = document.getElementById('check-cash');
-        const checkReimburse = document.getElementById('check-reimburse');
-        const checkPcf = document.getElementById('check-pcf');
-        const checkExternal = document.getElementById('check-external');
+        const btnAdd = document.getElementById('addOrUpdateBtn');
+        const btnPrintCurrent = document.getElementById('printCurrentBtn');
+        const btnPrintBatch = document.getElementById('printQueueBtn');
+        const btnClearQueue = document.getElementById('clearQueueBtn');
+        const btnCancelClear = document.getElementById('cancelClearBtn');
 
-        // --- INITIALIZATION ---
-        dateInput.valueAsDate = new Date();
-
-        // --- AUTO-SAVE (Local Storage) ---
-        const savedRequester = localStorage.getItem('rfp_requester');
-        if (savedRequester) requestByInput.value = savedRequester;
+        // Inputs
+        const iPayee = document.getElementById('payee');
+        const iDept = document.getElementById('department');
+        const iReq = document.getElementById('request-by');
+        const iApp = document.getElementById('approved-by');
+        const iDate = document.getElementById('date-input');
+        const iParticulars = document.getElementById('particulars');
+        const iDetails = document.getElementById('details');
+        const iAmount = document.getElementById('amount');
         
-        requestByInput.addEventListener('input', () => {
-            localStorage.setItem('rfp_requester', requestByInput.value);
-        });
+        // Init
+        iDate.valueAsDate = new Date();
+        loadQueueFromStorage(); 
+        loadLocalNames();
 
-        const savedApprover = localStorage.getItem('rfp_approver');
-        if (savedApprover) approvedByInput.value = savedApprover;
-        
-        approvedByInput.addEventListener('input', () => {
-            localStorage.setItem('rfp_approver', approvedByInput.value);
-        });
+        function loadLocalNames() {
+            if(localStorage.getItem('rfp_requester')) iReq.value = localStorage.getItem('rfp_requester');
+            if(localStorage.getItem('rfp_approver')) iApp.value = localStorage.getItem('rfp_approver');
+        }
 
-        // --- PRINT LOGIC ---
-        document.getElementById('printNowBtn').addEventListener('click', () => {
-            // Validation
-            let selectedType = null;
-            for(const radio of typeRadios) { if(radio.checked) { selectedType = radio.value; break; } }
-            
-            if(!payeeInput.value || !amountInput.value || !particularsInput.value) { 
-                alert("Please fill in Payee, Particulars, and Amount."); 
-                return; 
+        // --- STORAGE LOGIC ---
+        function saveQueueToStorage() {
+            localStorage.setItem('rfpQueue', JSON.stringify(rfpQueue));
+        }
+
+        function loadQueueFromStorage() {
+            const saved = localStorage.getItem('rfpQueue');
+            if(saved) {
+                rfpQueue = JSON.parse(saved);
+                updateQueueUI();
+            }
+        }
+
+        // --- ADD / UPDATE LOGIC ---
+        btnAdd.addEventListener('click', () => {
+            if(!iPayee.value || !iAmount.value || !iParticulars.value) {
+                alert("Please fill in Payee, Particulars, and Amount."); return;
             }
 
-            // --- MAPPING DATA ---
-            checkCash.textContent = ''; checkReimburse.textContent = ''; checkPcf.textContent = ''; checkExternal.textContent = '';
-            if(selectedType === 'cash') checkCash.textContent = '✓';
-            if(selectedType === 'reimbursement') checkReimburse.textContent = '✓';
-            if(selectedType === 'pcf') checkPcf.textContent = '✓';
-            if(selectedType === 'external') checkExternal.textContent = '✓';
-
-            displayPayee.textContent = payeeInput.value.toUpperCase();
-            displayDepartment.textContent = deptInput.value.toUpperCase();
+            const type = document.querySelector('input[name="type-opt"]:checked').value;
+            const currency = document.querySelector('input[name="currency-opt"]:checked').value;
             
-            const rawDate = dateInput.value; 
-            if(rawDate) {
-                const [year, month, day] = rawDate.split('-');
-                displayDate.textContent = `${month}/${day}/${year}`;
+            const rfpData = {
+                type: type,
+                payee: iPayee.value.toUpperCase(),
+                dept: iDept.value.toUpperCase(),
+                date: iDate.value,
+                req: iReq.value.toUpperCase(),
+                app: iApp.value.toUpperCase(),
+                particularsRaw: iParticulars.value, 
+                detailsRaw: iDetails.value,
+                particulars: iParticulars.value + (iDetails.value ? '\n\n' + iDetails.value : ''),
+                amount: parseFloat(iAmount.value),
+                currency: currency
+            };
+
+            if(editingId) {
+                const index = rfpQueue.findIndex(q => q.id === editingId);
+                if(index !== -1) {
+                    rfpData.id = editingId; 
+                    rfpQueue[index] = rfpData;
+                }
+                resetToNormalMode();
             } else {
-                displayDate.textContent = '';
+                rfpData.id = Date.now();
+                rfpQueue.push(rfpData);
             }
 
-            displayRequestBy.textContent = requestByInput.value.toUpperCase();
-            displayApprovedBy.textContent = approvedByInput.value.toUpperCase();
+            // Save inputs to local storage just in case
+            localStorage.setItem('rfp_requester', iReq.value);
+            localStorage.setItem('rfp_approver', iApp.value);
 
-            let combinedParticulars = particularsInput.value;
-            if (detailsInput.value) {
-                combinedParticulars += '\n\n' + detailsInput.value; 
-            }
-            displayParticulars.textContent = combinedParticulars;
+            saveQueueToStorage(); 
+            updateQueueUI();
+            clearFormFields(false); 
+        });
+
+        // --- UI & STATE UPDATES ---
+        function updateQueueUI() {
+            queueItemsContainer.innerHTML = '';
             
-            const rawVal = parseFloat(amountInput.value);
-            let currencySymbol = '₱'; 
-            for (const radio of currencyRadios) { if (radio.checked) { currencySymbol = radio.value; break; } }
+            if(rfpQueue.length === 0) {
+                queueItemsContainer.innerHTML = '<div style="padding:20px; text-align:center; color:#999; font-size:12px;">Queue is empty</div>';
+                btnPrintBatch.textContent = "Print Batch";
+                btnPrintBatch.style.backgroundColor = "#6c757d";
+            } else {
+                btnPrintBatch.textContent = `Print Batch (${rfpQueue.length})`;
+                btnPrintBatch.style.backgroundColor = "#28a745";
+            }
 
-            const formattedAmount = rawVal.toLocaleString('en-US', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
+            rfpQueue.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'queue-item';
+                if(item.id === editingId) div.classList.add('editing');
+
+                const fmtAmt = item.amount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+                div.innerHTML = `
+                    <div class="q-info">
+                        <span>${index+1}. ${item.payee}</span>
+                        <span>${item.currency} ${fmtAmt}</span>
+                    </div>
+                    <div class="q-details">${item.particularsRaw.substring(0, 30)}...</div>
+                    <div class="q-actions">
+                        <span class="q-btn q-edit" onclick="editQueueItem(${item.id})">Edit</span>
+                        <span class="q-btn q-remove" onclick="removeItem(${item.id})">Remove</span>
+                    </div>
+                `;
+                queueItemsContainer.appendChild(div);
             });
+        }
 
-            displayAmount.textContent = `${formattedAmount}`;
-            displayTotalAmount.textContent = `${currencySymbol} ${formattedAmount}`;
+        window.editQueueItem = function(id) {
+            const item = rfpQueue.find(q => q.id === id);
+            if(!item) return;
 
-            // --- IMMEDIATE PRINT (SKIP REVIEW) ---
-            inputSection.style.display = 'none';
-            appContainer.classList.remove('hidden-on-screen');
-            actionButtons.classList.remove('hidden-on-screen');
+            iPayee.value = item.payee;
+            iDept.value = item.dept;
+            iDate.value = item.date;
+            iReq.value = item.req;
+            iApp.value = item.app;
+            iAmount.value = item.amount;
+            iParticulars.value = item.particularsRaw || ''; 
+            iDetails.value = item.detailsRaw || '';
 
-            // Small delay just to ensure DOM is updated, but effectively instant for user
-            setTimeout(() => {
-                window.print();
-            }, 200);
-        });
+            document.querySelector(`input[name="type-opt"][value="${item.type}"]`).checked = true;
+            document.querySelector(`input[name="currency-opt"][value="${item.currency}"]`).checked = true;
 
-        // --- CLEAR ALL BUTTON ---
-        document.getElementById('clearAllBtn').addEventListener('click', () => {
-            if(confirm("Are you sure you want to clear all fields?")) {
-                payeeInput.value = '';
-                deptInput.value = 'SCM'; // Reset to default if needed, or ''
-                particularsInput.value = '';
-                detailsInput.value = '';
-                amountInput.value = '';
-                // Optional: Clear names or keep them? Usually "Clear All" means everything:
-                requestByInput.value = ''; 
-                approvedByInput.value = '';
-                
-                dateInput.valueAsDate = new Date(); // Reset to today
-                
-                // Reset Radio to Default (External & Peso)
-                document.querySelector('input[name="type-opt"][value="external"]').checked = true;
-                document.querySelector('input[name="currency-opt"][value="₱"]').checked = true;
+            editingId = id;
+            btnAdd.textContent = "💾 Update Item";
+            btnAdd.style.backgroundColor = "#007bff"; 
+            btnAdd.style.color = "#fff";
+            btnCancelClear.textContent = "❌ Cancel Edit";
+            
+            updateQueueUI();
+        }
+
+        window.removeItem = function(id) {
+            if(editingId === id) {
+                resetToNormalMode();
+                clearFormFields(false);
+            }
+            rfpQueue = rfpQueue.filter(item => item.id !== id);
+            saveQueueToStorage(); 
+            updateQueueUI();
+        }
+
+        // --- ACTIONS ---
+        function resetToNormalMode() {
+            editingId = null;
+            btnAdd.textContent = "➕ Add to Queue";
+            btnAdd.style.backgroundColor = "#ffc107";
+            btnAdd.style.color = "#333";
+            btnCancelClear.textContent = "❌ Clear Form";
+        }
+
+        function clearFormFields(clearNames) {
+            iPayee.value = '';
+            iParticulars.value = '';
+            iDetails.value = '';
+            iAmount.value = '';
+            iDate.valueAsDate = new Date();
+            if(clearNames) { iReq.value = ''; iApp.value = ''; }
+        }
+
+        btnCancelClear.addEventListener('click', () => {
+            if(editingId) {
+                resetToNormalMode();
+                clearFormFields(false);
+                updateQueueUI();
+            } else {
+                if(confirm("Clear everything including Names?")) {
+                    clearFormFields(true); 
+                }
             }
         });
 
-        // --- BACK BUTTON ---
-        document.getElementById('backBtn').addEventListener('click', () => {
-            inputSection.style.display = 'block';
-            appContainer.classList.add('hidden-on-screen');
-            actionButtons.classList.add('hidden-on-screen');
+        // Clear All Queue
+        btnClearQueue.addEventListener('click', () => {
+            if(rfpQueue.length === 0) return;
+            if(confirm("Are you sure you want to delete ALL items in the queue?")) {
+                rfpQueue = [];
+                saveQueueToStorage();
+                updateQueueUI();
+                if(editingId) { resetToNormalMode(); clearFormFields(false); }
+            }
         });
 
-        // --- CREATE NEW RFP BUTTON ---
-        document.getElementById('createNewBtn').addEventListener('click', () => {
-            payeeInput.value = '';
-            particularsInput.value = '';
-            detailsInput.value = '';
-            amountInput.value = '';
-            dateInput.valueAsDate = new Date();
-            inputSection.style.display = 'block';
-            appContainer.classList.add('hidden-on-screen');
-            actionButtons.classList.add('hidden-on-screen');
-            payeeInput.focus();
+        // --- PRINTING ---
+        
+        // 1. Print Current Only
+        btnPrintCurrent.addEventListener('click', () => {
+            if(!iPayee.value || !iAmount.value || !iParticulars.value) {
+                alert("Please fill in form first."); return;
+            }
+            
+            const type = document.querySelector('input[name="type-opt"]:checked').value;
+            const currency = document.querySelector('input[name="currency-opt"]:checked').value;
+            const singleItem = {
+                type: type,
+                payee: iPayee.value.toUpperCase(),
+                dept: iDept.value.toUpperCase(),
+                date: iDate.value,
+                req: iReq.value.toUpperCase(),
+                app: iApp.value.toUpperCase(),
+                particulars: iParticulars.value + (iDetails.value ? '\n\n' + iDetails.value : ''),
+                amount: parseFloat(iAmount.value),
+                currency: currency
+            };
+
+            // Save Names
+            localStorage.setItem('rfp_requester', iReq.value);
+            localStorage.setItem('rfp_approver', iApp.value);
+
+            generatePrintPreview([singleItem]);
+            executePrint();
+        });
+
+        // 2. Print Batch
+        btnPrintBatch.addEventListener('click', () => {
+            if(rfpQueue.length === 0) {
+                alert("Queue is empty!"); return;
+            }
+            generatePrintPreview(rfpQueue);
+            executePrint();
+        });
+
+        function generatePrintPreview(dataArray) {
+            printArea.innerHTML = '';
+            const template = document.getElementById('rfp-template');
+
+            dataArray.forEach(data => {
+                const clone = template.content.cloneNode(true);
+                
+                if(data.type === 'cash') clone.querySelector('.box-cash').textContent = '✓';
+                if(data.type === 'reimbursement') clone.querySelector('.box-reimburse').textContent = '✓';
+                if(data.type === 'pcf') clone.querySelector('.box-pcf').textContent = '✓';
+                if(data.type === 'external') clone.querySelector('.box-external').textContent = '✓';
+
+                clone.querySelector('.val-payee').textContent = data.payee;
+                clone.querySelector('.val-dept').textContent = data.dept;
+                
+                if(data.date) {
+                    const [y, m, d] = data.date.split('-');
+                    clone.querySelector('.val-date').textContent = `${m}/${d}/${y}`;
+                }
+
+                clone.querySelector('.val-req').textContent = data.req;
+                clone.querySelector('.val-app').textContent = data.app;
+                clone.querySelector('.val-particulars').textContent = data.particulars;
+
+                const fmtAmt = data.amount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                clone.querySelector('.val-amount').textContent = `${fmtAmt}`;
+                clone.querySelector('.val-total').textContent = `${data.currency} ${fmtAmt}`;
+
+                printArea.appendChild(clone);
+            });
+        }
+
+        function executePrint() {
+            inputSection.style.display = 'none';
+            printArea.style.display = 'block';
+            actionButtons.style.display = 'block'; // Show Centered Back Button
+            setTimeout(() => window.print(), 500);
+        }
+
+        document.getElementById('backBtn').addEventListener('click', () => {
+            inputSection.style.display = 'flex'; // Restore Flex layout
+            printArea.style.display = 'none';
+            actionButtons.style.display = 'none';
         });
     </script>
 </body>
