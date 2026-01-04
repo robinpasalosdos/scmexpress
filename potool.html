@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Data Tool (Turbo)</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #f1f5f9;
+            --text: #0f172a;
+            --border: #cbd5e1;
+            --success: #16a34a;
+            --hover: #eff6ff;
+            --active-seq: #facc15; /* Yellow for active sequence */
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0.5rem;
+            height: 100vh;
+            box-sizing: border-box;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container { display: flex; flex-direction: column; gap: 0.5rem; height: 100%; }
+
+        .section {
+            background: white; padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border);
+            display: flex; flex-direction: column; gap: 0.25rem; min-height: 0;
+        }
+
+        .section-header {
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; flex-shrink: 0;
+        }
+        
+        /* Helper text for Spacebar mode */
+        .shortcut-hint { color: var(--primary); font-size: 0.7rem; font-weight: normal; margin-left: 10px; display: none;}
+        .has-data .shortcut-hint { display: inline; }
+
+        textarea {
+            width: 100%; height: 30px; padding: 4px 8px; border: 1px solid var(--border);
+            border-radius: 4px; font-family: monospace; font-size: 0.75rem; resize: none;
+            background: #f8fafc; box-sizing: border-box; flex-shrink: 0;
+        }
+        textarea:focus { outline: 1px solid var(--primary); background: #fff; }
+
+        .output-container {
+            display: flex; flex-direction: column; gap: 0.25rem; overflow-y: auto; flex-grow: 1; padding-right: 2px;
+        }
+        .output-container::-webkit-scrollbar { width: 6px; }
+        .output-container::-webkit-scrollbar-track { background: #f1f1f1; }
+        .output-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+        .split-view { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; flex: 1; min-height: 0; }
+        .radio-group { display: flex; gap: 0.5rem; align-items: center; }
+        .radio-label { 
+            font-size: 0.7rem; cursor: pointer; display: flex; align-items: center; gap: 2px; 
+            background: #e2e8f0; padding: 2px 6px; border-radius: 4px;
+        }
+        input[type="radio"] { margin: 0; }
+
+        .row-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 4px; padding: 0.25rem; flex-shrink: 0; }
+        .fields-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.25rem; }
+        .desc-grid { margin-top: 0.25rem; display: flex; flex-direction: column; gap: 0.25rem; }
+        .item-grid { display: grid; grid-template-columns: 35px 45px 1fr 70px; gap: 0.25rem; align-items: center; }
+
+        .value-box {
+            background-color: var(--hover); border: 1px solid #bfdbfe; color: var(--primary);
+            padding: 2px 6px; font-size: 0.75rem; border-radius: 3px; font-weight: 600;
+            cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            height: 20px; line-height: 18px; user-select: none; transition: all 0.1s;
+        }
+        .value-box.wide { white-space: normal; height: auto; min-height: 20px; text-align: left; line-height: 1.2; color: #334155; font-size: 0.7rem; }
+        .value-box.warning { background-color: #fff1f2; border-color: #fecdd3; color: #e11d48; }
+        .value-box.secondary { background-color: #fffbeb; border-color: #fde68a; color: #d97706; }
+        .value-box.static-item { background-color: #f3e8ff; border-color: #d8b4fe; color: #7e22ce; }
+
+        /* THE SEQUENCER STYLES */
+        .value-box.next-in-line {
+            border-color: var(--active-seq);
+            box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.4);
+            background-color: #fefce8;
+            transform: scale(1.02);
+            z-index: 10;
+        }
+
+        .value-box.copied {
+            background-color: var(--success) !important; border-color: var(--success) !important; color: white !important;
+        }
+        .value-box.copied::after { content: "OK"; font-size: 0.6rem; float: right; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="section" id="section1" style="flex: 0 0 auto; max-height: 40vh;">
+            <div class="section-header">
+                <div>1. PO Header <span class="shortcut-hint">(Press Spacebar to copy Next)</span></div>
+                <div class="radio-group">
+                    <label class="radio-label"><input type="radio" name="dateType" value="1" checked onchange="processRowData()"> Type 1</label>
+                    <label class="radio-label"><input type="radio" name="dateType" value="2" onchange="processRowData()"> Type 2</label>
+                </div>
+            </div>
+            <textarea id="inputRow" placeholder="Paste Row..." oninput="processRowData()"></textarea>
+            <div id="outputRow" class="output-container"></div>
+        </div>
+
+        <div class="split-view">
+            <div class="section">
+                <div class="section-header">2. Line Break</div>
+                <textarea id="inputSimple" placeholder="Paste list..." oninput="processSimpleList()"></textarea>
+                <div id="outputSimple" class="output-container"></div>
+            </div>
+            <div class="section">
+                <div class="section-header">3. Item Extract</div>
+                <textarea id="inputItems" placeholder="1 TAB PC TAB DESC..." oninput="processItemData()"></textarea>
+                <div id="outputItems" class="output-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- GLOBAL SEQUENCER STATE ---
+        let sequenceElements = []; // Stores all .value-box elements in order
+        let currentIndex = 0;
+
+        function updateSequence() {
+            // Re-scan DOM for all copyable boxes
+            sequenceElements = Array.from(document.querySelectorAll('.value-box'));
+            
+            // If we are out of bounds, reset or stay at end? Let's stay at end or reset if 0
+            if (currentIndex >= sequenceElements.length) currentIndex = 0;
+            
+            highlightNext();
+        }
+
+        function highlightNext() {
+            // Remove highlight from all
+            document.querySelectorAll('.next-in-line').forEach(el => el.classList.remove('next-in-line'));
+            
+            // Add highlight to current
+            if (sequenceElements[currentIndex]) {
+                sequenceElements[currentIndex].classList.add('next-in-line');
+                
+                // Auto-scroll if the element is out of view
+                sequenceElements[currentIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        // Global Key Listener
+        document.addEventListener('keydown', (e) => {
+            // Ignore if typing in a textarea
+            if (e.target.tagName === 'TEXTAREA') return;
+
+            if (e.code === 'Space') {
+                e.preventDefault(); // Stop page scroll
+                if (sequenceElements[currentIndex]) {
+                    // Trigger the click logic
+                    sequenceElements[currentIndex].click();
+                }
+            }
+            
+            if (e.code === 'Escape') {
+                currentIndex = 0;
+                highlightNext();
+            }
+        });
+
+        // --- UTILS ---
+        async function copyText(element, text) {
+            // Logic to advance sequence if clicked element matches current index
+            // OR if clicked manually, update index to that element + 1
+            const clickedIndex = sequenceElements.indexOf(element);
+            
+            if (clickedIndex !== -1) {
+                currentIndex = clickedIndex + 1;
+                highlightNext();
+            }
+
+            if (text === "N/A" || !text) return;
+            try {
+                await navigator.clipboard.writeText(text);
+                element.classList.add('copied');
+                setTimeout(() => element.classList.remove('copied'), 600);
+            } catch (err) { console.error(err); }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return "";
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        }
+        function cleanNumber(str) {
+            if (!str) return "";
+            return str.replace(/[$,]/g, '').trim();
+        }
+
+        // --- SECTION 1 ---
+        function calculateDates() {
+            const type = document.querySelector('input[name="dateType"]:checked').value;
+            const today = new Date();
+            let reqDate, expDate;
+            if (type === '1') {
+                const future = new Date(today);
+                future.setDate(today.getDate() + 14);
+                reqDate = future; expDate = future;
+            } else {
+                reqDate = new Date(today);
+                expDate = new Date(today);
+                expDate.setMonth(today.getMonth() + 1);
+            }
+            const fmt = d => `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
+            return { req: fmt(reqDate), exp: fmt(expDate) };
+        }
+
+        function processRowData() {
+            const input = document.getElementById('inputRow').value;
+            const output = document.getElementById('outputRow');
+            const dates = calculateDates();
+            
+            output.innerHTML = '';
+            
+            // Show/Hide hint
+            if(input.trim()) document.getElementById('section1').classList.add('has-data');
+            
+            if (!input.trim()) { updateSequence(); return; }
+
+            const rows = input.trim().split('\n');
+            rows.forEach((row) => {
+                if(!row.trim()) return;
+                const cols = row.split('\t');
+                
+                const description = cols[6] || "";
+                const rawShop = cols[7] || "N/A";
+                const supplier = cols[8] || "N/A";
+                const rawRequestedBy = cols[2] || "N/A";
+                const transType = cols[13] || "N/A"; 
+                const purchaserCode = cols[15] || ""; 
+                const locationCode = cols[16] || ""; 
+
+                const displayRequestedBy = (purchaserCode && purchaserCode.trim() !== "") ? purchaserCode : rawRequestedBy;
+                const displayShop = (locationCode && locationCode.trim() !== "") ? locationCode : rawShop;
+                const slaWarning = "**NONE ADHERANCE TO SLA WILL RESULT TO PURCHASE ORDER CANCELLATION**";
+
+                const card = document.createElement('div');
+                card.className = 'row-card';
+                // Note: I ordered these divs logically for the Spacebar flow
+                card.innerHTML = `
+                    <div class="fields-grid">
+                        <div class="value-box" title="Supplier" onclick="copyText(this, '${escapeHtml(supplier)}')"><span>${escapeHtml(supplier)}</span></div>
+                        <div class="value-box" title="Trans Type" onclick="copyText(this, '${escapeHtml(transType)}')"><span>${escapeHtml(transType)}</span></div>
+                        <div class="value-box" title="Req By" onclick="copyText(this, '${escapeHtml(displayRequestedBy)}')"><span>${escapeHtml(displayRequestedBy)}</span></div>
+                        <div class="value-box" title="Shop" onclick="copyText(this, '${escapeHtml(displayShop)}')"><span>${escapeHtml(displayShop)}</span></div>
+                        <div class="value-box secondary" title="Req Date" onclick="copyText(this, '${dates.req}')"><span>${dates.req}</span></div>
+                        <div class="value-box secondary" title="Exp Date" onclick="copyText(this, '${dates.exp}')"><span>${dates.exp}</span></div>
+                    </div>
+                    <div class="desc-grid">
+                        <div class="value-box wide" onclick="copyText(this, '${escapeHtml(description)}')"><span>${escapeHtml(description)}</span></div>
+                        <div class="value-box wide warning" onclick="copyText(this, '${escapeHtml(slaWarning)}')"><span>${escapeHtml(slaWarning)}</span></div>
+                        <div class="value-box wide static-item" onclick="copyText(this, 'JOSE RIZAL')"><span>JOSE RIZAL</span></div>
+                    </div>
+                `;
+                output.appendChild(card);
+            });
+            updateSequence(); // Update Sequencer
+        }
+
+        // --- SECTION 3 (Items) ---
+        function processItemData() {
+            const input = document.getElementById('inputItems').value;
+            const output = document.getElementById('outputItems');
+            output.innerHTML = '';
+            if (!input.trim()) { updateSequence(); return; }
+
+            const lines = input.trim().split('\n');
+            lines.forEach((line) => {
+                if(!line.trim()) return;
+                const cols = line.split('\t').map(c => c.trim()).filter(c => c !== "");
+                if (cols.length < 3) return;
+
+                const qty = cols[0];
+                const unit = cols[1];
+                const desc = cols[2];
+                const rawAmount = cols[cols.length - 1];
+                const amount = cleanNumber(rawAmount);
+
+                const card = document.createElement('div');
+                card.className = 'row-card';
+                card.innerHTML = `
+                    <div class="item-grid">
+                        <div class="value-box" title="Qty" onclick="copyText(this, '${qty}')"><span>${qty}</span></div>
+                        <div class="value-box" title="Unit" onclick="copyText(this, '${unit}')"><span>${unit}</span></div>
+                        <div class="value-box" title="Desc" onclick="copyText(this, '${escapeHtml(desc)}')"><span>${escapeHtml(desc)}</span></div>
+                        <div class="value-box secondary" title="Amount" onclick="copyText(this, '${amount}')"><span>${amount}</span></div>
+                    </div>
+                `;
+                output.appendChild(card);
+            });
+            updateSequence(); // Update Sequencer
+        }
+
+        // --- SECTION 2 (Simple) ---
+        function processSimpleList() {
+            const input = document.getElementById('inputSimple').value;
+            const output = document.getElementById('outputSimple');
+            output.innerHTML = '';
+            if (!input.trim()) { updateSequence(); return; }
+
+            input.trim().split('\n').forEach((line) => {
+                if(!line.trim()) return;
+                const card = document.createElement('div');
+                card.className = 'row-card';
+                card.innerHTML = `
+                    <div class="value-box wide" style="margin-bottom:0;" onclick="copyText(this, '${escapeHtml(line)}')"><span>${escapeHtml(line)}</span></div>
+                `;
+                output.appendChild(card);
+            });
+            updateSequence(); // Update Sequencer
+        }
+        
+        // Init
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('data')) {
+                document.getElementById('inputRow').value = urlParams.get('data');
+                processRowData();
+            }
+        });
+    </script>
+</body>
+</html>
